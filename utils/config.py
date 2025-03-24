@@ -17,11 +17,10 @@ EQUATIONS = {
     }
 }
 
-
 SYSTEMS = {
     "sin(x+y) = 1.5x - 0.1; x² + 2y² = 1": {
         "phi1": lambda x, y: (np.sin(x + y) + 0.1) / 1.5,
-        "phi2": lambda x, y: np.sqrt((1 - x**2) / 2)
+        "phi2": lambda x, y: np.sqrt((1 - x ** 2) / 2) * (1 if y >= 0 else -1)
     },
 
     "sin(x+0.5) - y = 1; cos(y-2) + x = 0": {
@@ -31,6 +30,6 @@ SYSTEMS = {
 
     "sin(x+y) - 1.4x = 0; x² + y² = 1": {
         "phi1": lambda x, y: np.sin(x + y) / 1.4,
-        "phi2": lambda x, y: np.sqrt(1 - x**2)
+        "phi2": lambda x, y: np.sqrt(max(0, 1 - x ** 2)) * (1 if abs(y) < 1e-10 else np.sign(y))
     }
 }

@@ -1,17 +1,34 @@
-def system_simple_iteration(phi1, phi2, x0, y0, eps, max_iter=1000):
-    x_prev, y_prev = x0, y0
-    iterations = 0
+from utils.config import SYSTEMS
+
+
+def system_simple_iteration(
+        system_name,
+        x0,
+        y0,
+        eps = 1e-6,
+        max_iter = 100,
+        lambda_ = 0.7,
+):
+    phi1 = SYSTEMS[system_name]["phi1"]
+    phi2 = SYSTEMS[system_name]["phi2"]
+
     errors = []
+    x_prev, y_prev = x0, y0
 
-    while True:
-        x_next = phi1(x_prev, y_prev)
-        y_next = phi2(x_prev, y_prev)
-        errors.append((abs(x_next - x_prev), abs(y_next - y_prev)))
-        iterations += 1
+    for iteration in range(max_iter):
+        try:
+            x_next = x_prev + lambda_ * (phi1(x_prev, y_prev) - x_prev)
+            y_next = y_prev + lambda_ * (phi2(x_prev, y_prev) - y_prev)
+        except ValueError as e:
+            raise RuntimeError(f"Ошибка вычисления: {str(e)}")
 
-        if (errors[-1][0] < eps and errors[-1][1] < eps) or iterations >= max_iter:
+        error_x = abs(x_next - x_prev)
+        error_y = abs(y_next - y_prev)
+        errors.append((error_x, error_y))
+
+        if error_x < eps and error_y < eps:
             break
 
         x_prev, y_prev = x_next, y_next
 
-    return (x_next, y_next), iterations, errors
+    return (x_next, y_next), iteration + 1, errors

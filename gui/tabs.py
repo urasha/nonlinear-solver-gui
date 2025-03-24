@@ -73,8 +73,8 @@ class EquationTab(QWidget):
 
     def solve_equation(self):
         try:
-            a = float(self.a_input.text())
-            b = float(self.b_input.text())
+            a = float(self.a_input.text().replace(",", "."))
+            b = float(self.b_input.text().replace(",", "."))
             eps = float(self.eps_input.text().replace(",", "."))
         except ValueError:
             QMessageBox.critical(self, "Ошибка", "Некорректный ввод данных")
@@ -189,8 +189,8 @@ class SystemTab(QWidget):
 
     def solve_system(self):
         try:
-            x0 = float(self.x0_input.text())
-            y0 = float(self.y0_input.text())
+            x0 = float(self.x0_input.text().replace(",", "."))
+            y0 = float(self.y0_input.text().replace(",", "."))
             eps = float(self.eps_input.text().replace(",", "."))
         except ValueError:
             QMessageBox.critical(self, "Ошибка", "Некорректный ввод данных")
@@ -201,7 +201,11 @@ class SystemTab(QWidget):
 
         # System solving
         (x, y), iterations, errors = system_simple_iteration(
-            system["phi1"], system["phi2"], x0, y0, eps
+            system_name=system_name,
+            x0=x0,
+            y0=y0,
+            eps=eps,
+            lambda_=0.5,
         )
 
         # Output result
