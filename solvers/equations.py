@@ -20,7 +20,17 @@ def newton_method(f, df, x0, eps, max_iter=1000):
     return x, f(x), iterations
 
 
-def simple_iteration_method(phi, x0, eps, max_iter=1000):
+def simple_iteration_method(f, df, a, b, x0, eps, max_iter=1000):
+    mx = max(abs(df(a)), abs(df(b)))
+    lambda_param = 1 / mx
+
+    phi = lambda x: x + lambda_param * f(x)
+
+    phi_prime = lambda x: 1 + lambda_param * df(x)
+    for x in [a, b]:
+        if abs(phi_prime(x)) >= 1:
+            raise ValueError("Условие сходимости не выполнено на интервале.")
+
     iterations = 0
     x_prev = x0
     while True:
@@ -29,4 +39,5 @@ def simple_iteration_method(phi, x0, eps, max_iter=1000):
         if abs(x_next - x_prev) < eps or iterations >= max_iter:
             break
         x_prev = x_next
-    return x_next, phi(x_next), iterations
+
+    return x_next, f(x_next), iterations

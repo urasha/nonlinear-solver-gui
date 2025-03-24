@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QLabel, QComboBox,
-    QLineEdit, QPushButton, QTextEdit, QMessageBox
+    QLineEdit, QPushButton, QTextEdit, QMessageBox, QFileDialog
 )
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -22,6 +22,11 @@ class EquationTab(QWidget):
 
     def init_ui(self):
         layout = QVBoxLayout()
+
+        self.output_combo = QComboBox()
+        self.output_combo.addItems(["На экран", "В файл"])
+        layout.addWidget(QLabel("Вывод результатов:"))
+        layout.addWidget(self.output_combo)
 
         # Choice equation
         self.eq_combo = QComboBox()
@@ -70,7 +75,7 @@ class EquationTab(QWidget):
         try:
             a = float(self.a_input.text())
             b = float(self.b_input.text())
-            eps = float(self.eps_input.text())
+            eps = float(self.eps_input.text().replace(",", "."))
         except ValueError:
             QMessageBox.critical(self, "Ошибка", "Некорректный ввод данных")
             return
@@ -93,17 +98,41 @@ class EquationTab(QWidget):
             x0 = a if abs(f(a)) < abs(f(b)) else b
             result = newton_method(f, df, x0, eps)
         elif method == "Метод простой итерации":
-            phi = EQUATIONS[self.current_equation]["phi"]
+            f = EQUATIONS[self.current_equation]["f"]
+            df = EQUATIONS[self.current_equation]["df"]
             x0 = (a + b) / 2
-            result = simple_iteration_method(phi, x0, eps)
+
+            try:
+                result = simple_iteration_method(f, df, a, b, x0, eps)
+            except ValueError as e:
+                QMessageBox.critical(self, "Ошибка", str(e))
+                return
 
         # Output results
         if result:
             x, fx, iterations = result
-            self.result_text.setText(
-                f"Корень: {x:.6f}\nЗначение функции: {fx:.2e}\nИтераций: {iterations}"
+            output_text = (
+                f"Корень: {x:.6f}\n"
+                f"Значение функции: {fx:.6f}\n"
+                f"Итераций: {iterations}"
             )
+
             self.plot_function(a, b, f, x)
+
+            # Вывод в файл или на экран
+            if self.output_combo.currentText() == "В файл":
+                file_path, _ = QFileDialog.getSaveFileName(
+                    self, "Сохранить результаты", "", "Текстовые файлы (*.txt)"
+                )
+                if file_path:
+                    try:
+                        with open(file_path, "w", encoding="utf-8") as f:
+                            f.write(output_text)
+                        QMessageBox.information(self, "Успех", "Файл сохранен!")
+                    except Exception as e:
+                        QMessageBox.critical(self, "Ошибка", f"Ошибка записи: {str(e)}")
+            else:
+                self.result_text.setText(output_text)
 
     def plot_function(self, a, b, f, root_x):
         self.figure.clear()
@@ -131,6 +160,11 @@ class SystemTab(QWidget):
         layout.addWidget(QLabel("Выберите систему:"))
         layout.addWidget(self.sys_combo)
 
+        self.output_combo = QComboBox()
+        self.output_combo.addItems(["На экран", "В файл"])
+        layout.addWidget(QLabel("Вывод результатов:"))
+        layout.addWidget(self.output_combo)
+
         # Input start data
         self.x0_input = QLineEdit()
         self.y0_input = QLineEdit()
@@ -157,7 +191,7 @@ class SystemTab(QWidget):
         try:
             x0 = float(self.x0_input.text())
             y0 = float(self.y0_input.text())
-            eps = float(self.eps_input.text())
+            eps = float(self.eps_input.text().replace(",", "."))
         except ValueError:
             QMessageBox.critical(self, "Ошибка", "Некорректный ввод данных")
             return
@@ -179,6 +213,23 @@ class SystemTab(QWidget):
             "Погрешности:\n"
         )
         for i, (err_x, err_y) in enumerate(errors):
-            result_text += f"Шаг {i + 1}: Δx={err_x:.2e}, Δy={err_y:.2e}\n"
+            result_text += f"Шаг {i + 1}: Δx={err_x:.6f}, Δy={err_y:.6f}\n"
 
         self.result_text.setText(result_text)
+
+        if self.output_combo.currentText() == "В файл":
+            file_path, _ = QFileDialog.getSaveFileName(
+                self,
+                "Сохранить результаты",
+                "",
+                "Текстовые файлы (*.txt)"
+            )
+            if file_path:
+                try:
+                    with open(file_path, "w", encoding="utf-8") as f:
+                        f.write(result_text)
+                    QMessageBox.information(self, "Успех", "Файл сохранен!")
+                except Exception as e:
+                    QMessageBox.critical(self, "Ошибка", f"Ошибка записи: {str(e)}")
+        else:
+            self.result_text.setText(result_text)
