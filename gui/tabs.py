@@ -185,6 +185,10 @@ class SystemTab(QWidget):
         self.result_text.setReadOnly(True)
         layout.addWidget(self.result_text)
 
+        self.figure = Figure()
+        self.canvas = FigureCanvas(self.figure)
+        layout.addWidget(self.canvas)
+
         self.setLayout(layout)
 
     def solve_system(self):
@@ -219,6 +223,8 @@ class SystemTab(QWidget):
         for i, (err_x, err_y) in enumerate(errors):
             result_text += f"Шаг {i + 1}: Δx={err_x:.6f}, Δy={err_y:.6f}\n"
 
+        self.plot_system(system_name, x, y)
+
         self.result_text.setText(result_text)
 
         if self.output_combo.currentText() == "В файл":
@@ -237,3 +243,35 @@ class SystemTab(QWidget):
                     QMessageBox.critical(self, "Ошибка", f"Ошибка записи: {str(e)}")
         else:
             self.result_text.setText(result_text)
+
+    def plot_system(self, system_name, root_x, root_y):
+        self.figure.clear()
+        ax = self.figure.add_subplot(111)
+
+        x_vals = np.linspace(root_x - 2, root_x + 2, 100)
+        y_vals = np.linspace(root_y - 2, root_y + 2, 100)
+        x, y = np.meshgrid(x_vals, y_vals)
+
+        if system_name == "sin(x+y) = 1.5x - 0.1; x² + 2y² = 1":
+            z1 = np.sin(x + y) - (1.5 * x - 0.1)
+            z2 = x ** 2 + 2 * y ** 2 - 1
+        elif system_name == "sin(x+0.5) - y = 1; cos(y-2) + x = 0":
+            z1 = np.sin(x + 0.5) - y - 1
+            z2 = np.cos(y - 2) + x
+        elif system_name == "sin(x+y) - 1.4x = 0; x² + y² = 1":
+            z1 = np.sin(x + y) - 1.4 * x
+            z2 = x ** 2 + y ** 2 - 1
+
+        ax.contour(x, y, z1, levels=[0], colors='blue')
+        ax.contour(x, y, z2, levels=[0], colors='green')
+
+        ax.scatter(root_x, root_y, color='red', s=100, label='Решение')
+
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.axhline(0, color='black', linewidth=0.5)
+        ax.axvline(0, color='black', linewidth=0.5)
+        ax.grid(True)
+        ax.legend()
+
+        self.canvas.draw()
