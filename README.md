@@ -15,8 +15,8 @@ This repository contains a PyQt-based application for solving nonlinear equation
 ### 🚀 Installation and Running
 - Clone the repository:
   ```bash
-  git clone https://github.com/urasha/Nonlinear_Solver_GUI.git
-  cd Nonlinear_Solver_GUI
+  git clone https://github.com/urasha/nonlinear-solver-gui.git
+  cd nonlinear-solver-gui
   ```
 - Install dependencies:
   ```bash
